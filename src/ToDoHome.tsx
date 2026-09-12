@@ -1,10 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { Typography } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import type { Task, TaskList, DeadlineFilter } from './types/task';
 import TaskCard from './components/TaskCard';
 import FilterBar from './components/FilterBar';
+import TaskDialog, { makeEmptyTask } from './components/TaskDialog';
 import { PageWrapper, Content, EmptyState } from './styles/styled';
 import { parseDeadline, isWithinFilter } from './utils/date';
+import { USERS } from './constants/task';
 
 const INITIAL_DATA: TaskList = {
   userName: 'Nikita',
@@ -32,12 +36,16 @@ const INITIAL_DATA: TaskList = {
 };
 
 const ToDoHome: React.FC = () => {
-  const [data] = useState<TaskList>(INITIAL_DATA);
+  const [data, setData] = useState<TaskList>(INITIAL_DATA);
   const [search, setSearch] = useState('');
   const [deadlineFilter, setDeadlineFilter] = useState<DeadlineFilter>('all');
   const [executorFilter, setExecutorFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
+
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<Task>(() => makeEmptyTask(USERS[0]));
 
   const tasks: Task[] = data.userTasks;
 
@@ -63,41 +71,89 @@ const ToDoHome: React.FC = () => {
     });
   }, [tasks, search, deadlineFilter, executorFilter, categoryFilter, priorityFilter]);
 
+  const openCreate = () => {
+    setDraft(makeEmptyTask(USERS[0]));
+    setEditingId(null);
+    setTaskDialogOpen(true);
+  };
+
+  const openEdit = (id: string) => {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    setDraft({ ...task });
+    setEditingId(id);
+    setTaskDialogOpen(true);
+  };
+
+  const handleSave = (task: Task) => {
+    setData((prev) => {
+      const exists = prev.userTasks.some((t) => t.id === task.id);
+      const list = exists
+        ? prev.userTasks.map((t) => (t.id === task.id ? task : t))
+        : [...prev.userTasks, task];
+      return { ...prev, userTasks: list };
+    });
+    setTaskDialogOpen(false);
+  };
+
+  const handleDelete = (id: string) => {
+    if (!window.confirm('Удалить задачу?')) return;
+    setData((prev) => ({
+      ...prev,
+      userTasks: prev.userTasks.filter((t) => t.id !== id),
+    }));
+  };
+
   return (
-    <PageWrapper>
-      <Content>
-        <Typography variant="h4" sx={{ fontWeight: 600, mb: 3 }}>
-          To-Do · {data.userName}
-        </Typography>
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
+      <PageWrapper>
+        <Content>
+          <Typography variant="h4" sx={{ fontWeight: 600, mb: 3 }}>
+            To-Do · {data.userName}
+          </Typography>
 
-        <FilterBar
-          search={search}
-          setSearch={setSearch}
-          deadlineFilter={deadlineFilter}
-          setDeadlineFilter={setDeadlineFilter}
-          executorFilter={executorFilter}
-          setExecutorFilter={setExecutorFilter}
-          categoryFilter={categoryFilter}
-          setCategoryFilter={setCategoryFilter}
-          priorityFilter={priorityFilter}
-          setPriorityFilter={setPriorityFilter}
-          onAdd={() => {
-            /* откроем модалку на следующем этапе */
-          }}
+          <FilterBar
+            search={search}
+            setSearch={setSearch}
+            deadlineFilter={deadlineFilter}
+            setDeadlineFilter={setDeadlineFilter}
+            executorFilter={executorFilter}
+            setExecutorFilter={setExecutorFilter}
+            categoryFilter={categoryFilter}
+            setCategoryFilter={setCategoryFilter}
+            priorityFilter={priorityFilter}
+            setPriorityFilter={setPriorityFilter}
+            onAdd={openCreate}
+          />
+
+          {filtered.length === 0 ? (
+            <EmptyState>
+              <Typography variant="h6">Задач не найдено</Typography>
+              <Typography variant="body2">
+                Измените фильтры или добавьте новую задачу
+              </Typography>
+            </EmptyState>
+          ) : (
+            filtered.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+              />
+            ))
+          )}
+        </Content>
+
+        <TaskDialog
+          open={taskDialogOpen}
+          editingId={editingId}
+          initialTask={draft}
+          onClose={() => setTaskDialogOpen(false)}
+          onSave={handleSave}
         />
-
-        {filtered.length === 0 ? (
-          <EmptyState>
-            <Typography variant="h6">Задач не найдено</Typography>
-            <Typography variant="body2">
-              Измените фильтры или добавьте новую задачу
-            </Typography>
-          </EmptyState>
-        ) : (
-          filtered.map((task) => <TaskCard key={task.id} task={task} />)
-        )}
-      </Content>
-    </PageWrapper>
+      </PageWrapper>
+    </LocalizationProvider>
   );
 };
 

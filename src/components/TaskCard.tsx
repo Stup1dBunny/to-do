@@ -1,6 +1,7 @@
 import React from 'react';
 import { styled } from '@mui/material/styles';
-import { Card, CardContent, Chip } from '@mui/material';
+import { Card, CardContent, Chip, IconButton } from '@mui/material';
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import type { Task } from '../types/task';
 import {
   RowBetween,
@@ -10,6 +11,8 @@ import {
   TaskTitle,
   TaskDescription,
 } from '../styles/styled';
+import { parseDeadline } from '../utils/date';
+import { DATETIME_FORMAT } from '../constants/task';
 
 interface TaskCardProps {
   priority: number;
@@ -33,10 +36,15 @@ const StyledCard = styled(Card, {
 
 interface Props {
   task: Task;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-const TaskCard: React.FC<Props> = ({ task }) => {
+const TaskCard: React.FC<Props> = ({ task, onEdit, onDelete }) => {
   const pr = Number(task.taskPreorety);
+  const dt = parseDeadline(task.taskDeadLine);
+  const dateLabel = dt ? dt.format(DATETIME_FORMAT) : task.taskDeadLine;
+
   return (
     <StyledCard priority={pr} elevation={1}>
       <CardContent>
@@ -45,7 +53,7 @@ const TaskCard: React.FC<Props> = ({ task }) => {
             <TaskTitle variant="h6">{task.taskName}</TaskTitle>
             <TaskDescription variant="body2">{task.taskTitle}</TaskDescription>
             <ChipsRow>
-              <Chip size="small" label={`📅 ${task.taskDeadLine}`} />
+              <Chip size="small" label={`📅 ${dateLabel}`} />
               <Chip size="small" label={`👤 ${task.taskExecutor}`} />
               <Chip size="small" label={`🏷 ${task.taskCategory}`} />
               <Chip
@@ -55,7 +63,14 @@ const TaskCard: React.FC<Props> = ({ task }) => {
               />
             </ChipsRow>
           </FlexCol>
-          <IconRow>{/* кнопки edit/delete добавим позже */}</IconRow>
+          <IconRow>
+            <IconButton size="small" onClick={() => onEdit(task.id)}>
+              <EditIcon fontSize="small" />
+            </IconButton>
+            <IconButton size="small" color="error" onClick={() => onDelete(task.id)}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </IconRow>
         </RowBetween>
       </CardContent>
     </StyledCard>
