@@ -1,5 +1,5 @@
 import { styled } from '@mui/material/styles';
-import { Card, Typography } from '@mui/material';
+import { Card, Typography, Button, Divider } from '@mui/material';
 
 export const PageWrapper = styled('div')`
   min-height: 100vh;
@@ -74,4 +74,59 @@ export const ChipsRow = styled('div')`
 export const ActionsRight = styled('div')`
   display: flex;
   justify-content: flex-end;
+`;
+
+export const CalendarLayout = styled('div')`
+  display: flex;
+  gap: 16px;
+  @media (max-width: 700px) {
+    flex-direction: column;
+  }
+`;
+
+export const MiniTaskList = styled('div')`
+  flex: 1;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+`;
+
+export const MiniTask = styled('div')`
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f0f3f9;
+  margin-bottom: 8px;
+`;
+
+export const VerticalDivider = styled(Divider)`
+  && {
+    @media (max-width: 700px) {
+      display: none;
+    }
+  }
+`;
+
+export const AddButtonFullWidth = styled(Button)`
+  && {
+    margin-top: 12px;
+    width: 100%;
+  }
+`;
+
+export const DayCellWrapper = styled('div')`
+  position: relative;
+  width: 100%;
+  height: 100%;
+`;
+
+export const DayDot = styled('span')`
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1976d2;
+  pointer-events: none;
 `;

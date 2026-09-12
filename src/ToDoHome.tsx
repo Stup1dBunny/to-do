@@ -1,14 +1,16 @@
 import React, { useMemo, useState } from 'react';
-import { Typography } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button } from '@mui/material';
+import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import type { Task, TaskList, DeadlineFilter } from './types/task';
 import TaskCard from './components/TaskCard';
 import FilterBar from './components/FilterBar';
 import TaskDialog, { makeEmptyTask } from './components/TaskDialog';
+import CalendarDialog from './components/CalendarDialog';
 import { PageWrapper, Content, EmptyState } from './styles/styled';
-import { parseDeadline, isWithinFilter } from './utils/date';
-import { USERS } from './constants/task';
+import { parseDeadline, isWithinFilter, dayjs, type Dayjs } from './utils/date';
+import { USERS, DATE_FORMAT, DATETIME_FORMAT } from './constants/task';
 
 const INITIAL_DATA: TaskList = {
   userName: 'Nikita',
@@ -47,6 +49,9 @@ const ToDoHome: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Task>(() => makeEmptyTask(USERS[0]));
 
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<Dayjs>(dayjs());
+
   const tasks: Task[] = data.userTasks;
 
   const filtered = useMemo(() => {
@@ -71,8 +76,13 @@ const ToDoHome: React.FC = () => {
     });
   }, [tasks, search, deadlineFilter, executorFilter, categoryFilter, priorityFilter]);
 
-  const openCreate = () => {
-    setDraft(makeEmptyTask(USERS[0]));
+  const openCreate = (initialDay?: Dayjs) => {
+    const base = initialDay ?? dayjs();
+    const def = makeEmptyTask(USERS[0]);
+    const time = dayjs().hour(12).minute(0);
+    const date = base.hour(time.hour()).minute(time.minute());
+
+    setDraft({ ...def, taskDeadLine: date.format(DATETIME_FORMAT) });
     setEditingId(null);
     setTaskDialogOpen(true);
   };
@@ -107,11 +117,22 @@ const ToDoHome: React.FC = () => {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
       <PageWrapper>
-        <Content>
-          <Typography variant="h4" sx={{ fontWeight: 600, mb: 3 }}>
-            To-Do · {data.userName}
-          </Typography>
+        <AppBar position="sticky" color="primary" elevation={1}>
+          <Toolbar>
+            <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
+              To-Do · {data.userName}
+            </Typography>
+            <Button
+              color="inherit"
+              startIcon={<CalendarIcon />}
+              onClick={() => setCalendarOpen(true)}
+            >
+              Календарь
+            </Button>
+          </Toolbar>
+        </AppBar>
 
+        <Content>
           <FilterBar
             search={search}
             setSearch={setSearch}
@@ -123,7 +144,7 @@ const ToDoHome: React.FC = () => {
             setCategoryFilter={setCategoryFilter}
             priorityFilter={priorityFilter}
             setPriorityFilter={setPriorityFilter}
-            onAdd={openCreate}
+            onAdd={() => openCreate()}
           />
 
           {filtered.length === 0 ? (
@@ -151,6 +172,16 @@ const ToDoHome: React.FC = () => {
           initialTask={draft}
           onClose={() => setTaskDialogOpen(false)}
           onSave={handleSave}
+        />
+
+        <CalendarDialog
+          open={calendarOpen}
+          onClose={() => setCalendarOpen(false)}
+          tasks={tasks}
+          selectedDay={selectedDay}
+          setSelectedDay={setSelectedDay}
+          onAddForDay={openCreate}
+          onDeleteTask={handleDelete}
         />
       </PageWrapper>
     </LocalizationProvider>
