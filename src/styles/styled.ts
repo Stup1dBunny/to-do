@@ -70,3 +70,8 @@ export const ChipsRow = styled('div')`
   gap: 8px;
   margin-top: 12px;
 `;
+
+export const ActionsRight = styled('div')`
+  display: flex;
+  justify-content: flex-end;
+`;
