@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Card, CardContent, Typography, Stack } from '@mui/material';
+import { Typography } from '@mui/material';
 import type { Task, TaskList } from './types/task';
+import TaskCard from './components/TaskCard';
+import { PageWrapper, Content, EmptyState } from './styles/styled';
 
 const INITIAL_DATA: TaskList = {
   userName: 'Nikita',
@@ -32,28 +34,21 @@ const ToDoHome: React.FC = () => {
   const tasks: Task[] = data.userTasks;
 
   return (
-    <Stack spacing={2} sx={{ maxWidth: 800, margin: '0 auto', padding: 3 }}>
-      <Typography variant="h4" sx={{ fontWeight: 600 }}>
-        To-Do · {data.userName}
-      </Typography>
+    <PageWrapper>
+      <Content>
+        <Typography variant="h4" sx={{ fontWeight: 600, mb: 3 }}>
+          To-Do · {data.userName}
+        </Typography>
 
-      {tasks.map((task) => (
-        <Card key={task.id} elevation={1}>
-          <CardContent>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              {task.taskName}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {task.taskTitle}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              📅 {task.taskDeadLine} · 👤 {task.taskExecutor} · 🏷{' '}
-              {task.taskCategory} · ⚡ {task.taskPreorety}
-            </Typography>
-          </CardContent>
-        </Card>
-      ))}
-    </Stack>
+        {tasks.length === 0 ? (
+          <EmptyState>
+            <Typography variant="h6">Задач пока нет</Typography>
+          </EmptyState>
+        ) : (
+          tasks.map((task) => <TaskCard key={task.id} task={task} />)
+        )}
+      </Content>
+    </PageWrapper>
   );
 };
 
