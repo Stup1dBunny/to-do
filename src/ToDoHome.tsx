@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { AppBar, Toolbar, Typography, Button } from '@mui/material';
+import React, { useEffect, useMemo, useState } from 'react';
+import { AppBar, Toolbar, Typography, Button, Alert } from '@mui/material';
 import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -10,35 +10,16 @@ import TaskDialog, { makeEmptyTask } from './components/TaskDialog';
 import CalendarDialog from './components/CalendarDialog';
 import { PageWrapper, Content, EmptyState } from './styles/styled';
 import { parseDeadline, isWithinFilter, dayjs, type Dayjs } from './utils/date';
-import { USERS, DATE_FORMAT, DATETIME_FORMAT } from './constants/task';
+import { USERS, DATETIME_FORMAT } from './constants/task';
+import { fetchTasks, persistTasks } from './api/taskList';
 
-const INITIAL_DATA: TaskList = {
-  userName: 'Nikita',
-  userId: 1,
-  userTasks: [
-    {
-      id: 'seed-1',
-      taskName: 'Убраться',
-      taskTitle: 'Убраться дома',
-      taskDeadLine: '15.09.2026 18:00',
-      taskExecutor: 'Nikita',
-      taskCategory: 'Домашнее',
-      taskPreorety: '5',
-    },
-    {
-      id: 'seed-2',
-      taskName: 'Прочитать книгу',
-      taskTitle: 'Глава 3 по саморазвитию',
-      taskDeadLine: '14.09.2026 20:00',
-      taskExecutor: 'Nikita',
-      taskCategory: 'Саморазвитие',
-      taskPreorety: '4',
-    },
-  ],
-};
+const EMPTY_DATA: TaskList = { userName: 'Nikita', userId: 1, userTasks: [] };
 
 const ToDoHome: React.FC = () => {
-  const [data, setData] = useState<TaskList>(INITIAL_DATA);
+  const [data, setData] = useState<TaskList>(EMPTY_DATA);
+  const [loading, setLoading] = useState(true);
+  const [saveError, setSaveError] = useState<string>('');
+
   const [search, setSearch] = useState('');
   const [deadlineFilter, setDeadlineFilter] = useState<DeadlineFilter>('all');
   const [executorFilter, setExecutorFilter] = useState<string>('all');
@@ -51,6 +32,38 @@ const ToDoHome: React.FC = () => {
 
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<Dayjs>(dayjs());
+
+  // Первичная загрузка
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const loaded = await fetchTasks();
+        if (!cancelled) setData(loaded);
+      } catch (e) {
+        console.error('Не удалось загрузить задачи:', e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Автосохранение с дебаунсом
+  useEffect(() => {
+    if (loading) return;
+    const t = setTimeout(() => {
+      persistTasks(data)
+        .then(() => setSaveError(''))
+        .catch((e) => {
+          console.error('Не удалось сохранить:', e);
+          setSaveError('Ошибка сохранения. Проверь, запущен ли сервер.');
+        });
+    }, 400);
+    return () => clearTimeout(t);
+  }, [data, loading]);
 
   const tasks: Task[] = data.userTasks;
 
@@ -147,7 +160,17 @@ const ToDoHome: React.FC = () => {
             onAdd={() => openCreate()}
           />
 
-          {filtered.length === 0 ? (
+          {saveError && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              {saveError}
+            </Alert>
+          )}
+
+          {loading ? (
+            <EmptyState>
+              <Typography variant="h6">Загрузка...</Typography>
+            </EmptyState>
+          ) : filtered.length === 0 ? (
             <EmptyState>
               <Typography variant="h6">Задач не найдено</Typography>
               <Typography variant="body2">

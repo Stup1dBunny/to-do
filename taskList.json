@@ -1,0 +1,42 @@
+{
+  "userName": "Nikita",
+  "userId": 1,
+  "userTasks": [
+    {
+      "id": "3a0b5300-6c68-41ec-a401-07e225251b1d",
+      "taskName": "Спать ",
+      "taskTitle": "Z-z-z-z-z-z\n",
+      "taskDeadLine": "12.09.2026 12:00",
+      "taskExecutor": "Nikita",
+      "taskCategory": "Другое",
+      "taskPreorety": "3"
+    },
+    {
+      "id": "bad34471-5829-49e5-a2fe-4faebb2852da",
+      "taskName": "Убраться",
+      "taskTitle": "Убраться дома",
+      "taskDeadLine": "12.09.2026 13:00",
+      "taskExecutor": "Nikita",
+      "taskCategory": "Другое",
+      "taskPreorety": "4"
+    },
+    {
+      "id": "2be20b93-b0ba-4b84-8e3d-13a3a41f268a",
+      "taskName": "Ничего",
+      "taskTitle": "аааа",
+      "taskDeadLine": "12.09.2026 12:30",
+      "taskExecutor": "Nikita",
+      "taskCategory": "Другое",
+      "taskPreorety": "3"
+    },
+    {
+      "id": "f8019934-1cee-4e88-a881-11a70e6da858",
+      "taskName": "ППП",
+      "taskTitle": "ааа",
+      "taskDeadLine": "13.09.2026 12:00",
+      "taskExecutor": "Nikita",
+      "taskCategory": "Другое",
+      "taskPreorety": "3"
+    }
+  ]
+}
